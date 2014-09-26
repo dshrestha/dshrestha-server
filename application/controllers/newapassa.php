@@ -2,6 +2,50 @@
 	
 class Newapassa extends CI_Controller{
 	
+	public function albums(){
+		header('Content-type: application/json');
+		echo '{
+			"albums": [
+				{
+					"id":1,
+					"name":"Mt. Washington",
+					"description":"Mt. Washington",
+					"uploadDate":"08/05/2013",
+					"photoCount":50,
+					"coverImage":""
+				},
+				{
+					"id":2,
+					"name":"Virgin Islands",
+					"description":"Virgin Islands",
+					"uploadDate":"08/05/2013",
+					"photoCount":30,
+					"coverImage":""
+				}
+			]
+		}';
+	}
+
+	public function albumPhotos(){
+		header('Content-type: application/json');
+		$album = $this->input->get('album');
+		$photos = array();
+
+		if($album==="1"){			
+			for($i=0;$i<50;$i++){
+				array_push ($photos,array("id"=>$i,"album"=>"1", "source"=>(($i%15)+1).".jpg", "description"=>"", "meta"=>""));
+			}
+			echo (json_encode(array("album-photos"=>$photos)));
+			
+		} else {
+			for($i=0;$i<30;$i++){
+				array_push ($photos,array("id"=>$i,"album"=>"2", "source"=>(($i%15)+1).".jpg", "description"=>"", "meta"=>""));
+			}
+			echo (json_encode(array("album-photos"=>$photos)));			
+		}
+		
+	}
+
 	public function blogCategories(){
 		header('Content-type: application/json');
 		echo '{

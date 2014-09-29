@@ -4,26 +4,22 @@ class Newapassa extends CI_Controller{
 	
 	public function albums(){
 		header('Content-type: application/json');
-		echo '{
-			"albums": [
-				{
-					"id":1,
-					"name":"Mt. Washington",
-					"description":"Mt. Washington",
-					"uploadDate":"08/05/2013",
-					"photoCount":50,
-					"coverImage":""
-				},
-				{
-					"id":2,
-					"name":"Virgin Islands",
-					"description":"Virgin Islands",
-					"uploadDate":"08/05/2013",
-					"photoCount":30,
-					"coverImage":""
-				}
-			]
-		}';
+		$albums = array();
+
+		for($i=0;$i<10;$i++){
+			array_push ($albums,
+				array(
+					"id"=>$i,
+					"name"=>"Mt. Washington",
+					"description"=>"Mt. Washington", 
+					"uploadDate"=>"08/05/2013", 
+					"photoCount"=>"50",
+					"coverImage"=>"1.jpg"
+					)
+				);
+		}
+
+		echo (json_encode(array("albums"=>$albums)));		
 	}
 
 	public function albumPhotos(){

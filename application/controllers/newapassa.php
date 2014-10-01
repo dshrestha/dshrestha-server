@@ -2,6 +2,14 @@
 	
 class Newapassa extends CI_Controller{
 	
+	public function __construct()
+	{
+	    parent::__construct();
+	    
+	    /* Load the libraries and helpers */
+	    $this->load->library("session");
+	}
+
 	public function albums(){
 		header('Content-type: application/json');
 		$albums = array();
@@ -126,7 +134,7 @@ class Newapassa extends CI_Controller{
 					"id":1,
 					"name":"Affinnova",
 					"website":"http://www.affinnova.com/",
-					"logoPath":"images/logo/affinnova.jpg",
+					"logoPath":"assets/images/logo/affinnova.jpg",
 					"description":"Affinnova is the technology platform of choice for companies seeking to dramatically improve their innovation and marketing success rates. Powered by Affinnova’s optimization algorithms and predictive analytics and insights, marketers can explore a substantially wider creative space of product, advertising and design ideas, quickly identifying which will perform best in the market.",
 					"address_1":"265 Winter Street",
 					"address_2":"",
@@ -140,7 +148,7 @@ class Newapassa extends CI_Controller{
 					"id":2,
 					"name":"Innovate! Inc. ",
 					"website":"http://innovateteam.com/",
-					"logoPath":"images/logo/innovate.gif",
+					"logoPath":"assets/images/logo/innovate.gif",
 					"description":"Innovate! is an 8(a) certified, “green” business providing geospatial solutions, software engineering, IT security services, management consulting and transformation consulting services. We are passionate about and live consistent with taking care of the planet. Our primary clients are EPA, USGS, USDA, and many state, tribal and US territory environmental departments. Our focus is to drive efficiencies and business results through innovative consulting techniques IT solutions.",
 					"address_1":"5835 Valley View Drive",
 					"address_2":"",
@@ -153,7 +161,7 @@ class Newapassa extends CI_Controller{
 					"id":3,
 					"name":"Wayfair, LLC.",
 					"website":"http://wayfair.com/",
-					"logoPath":"images/logo/wayfair.jpg",
+					"logoPath":"assets/images/logo/wayfair.jpg",
 					"description":"Wayfair is a leader in the ecommerce space for things for the home (couches, end tables, lamps, and literally 3.1 million other items) and #51 overall in the ecommerce rankings(2011).",
 					"address_1":"177 Huntington Avenue ",
 					"address_2":"",
@@ -166,7 +174,7 @@ class Newapassa extends CI_Controller{
 					"id":4,
 					"name":"Worldlink Technologies Pvt. Ltd.",
 					"website":"http://wlinktech.com/",
-					"logoPath":"images/logo/worldlink.gif",
+					"logoPath":"assets/images/logo/worldlink.gif",
 					"description":"WorldLink is an experienced software solutions provider with extensive experience in consulting, development and implementation of enterprise applications in areas of ERP, CRM, HRM, Payroll and Pensions. Our experience covers a wide range of industry and market sectors that include government, telecom, BFSI and private businesses. Our services include consulting, application development, product management and maintenance, enterprise application implementation, integration, quality assurance and testing. ",
 					"address_1":"177 Huntington Avenue ",
 					"address_2":"",
@@ -555,7 +563,24 @@ class Newapassa extends CI_Controller{
 			]}';
 	}
 
-	
+	public function sendFeedback(){
+		$validCaptcha = $this->session->userdata('valid_captcha_word');
+		if($this->session->userdata('valid_captcha_word') === $this->input->post('captcha')){
+			$to      = 'quaint.stranger@gmail.com';
+			$from    = $this->input->post('email');
+			$subject = 'feedback from newapassa';
+			$message = $this->input->post('message');
+			$headers = 'From: '.$from. "\r\n" .
+			'Reply-To: '.$from. "\r\n" .
+			'X-Mailer: PHP/' . phpversion();
+			mail($to, $subject, $message, $headers);	
+		} else {
+			http_response_code(422);
+			header('Content-type: application/json');
+			echo (json_encode(array("errors"=>array(array('field'=>'captcha','message'=>'Captcha value entered did not match.')))));				
+		}
+		
+	}
 }	
 
 ?>

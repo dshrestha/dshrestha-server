@@ -21,7 +21,7 @@ class Captcha extends CI_Controller{
 	    );
 
 		$cap = create_captcha($vals);
-		$img = @imagecreatefromjpeg($vals['img_url'].$cap['time'].'.jpg');
+		$img = imagecreatefromjpeg($vals['img_url'].$cap['time'].'.jpg');
 		
 		$this->session->set_userdata('valid_captcha_word', $cap['word']);//use this to validate user
 		

@@ -8,46 +8,61 @@ class Newapassa extends CI_Controller{
 	    
 	    /* Load the libraries and helpers */
 	    $this->load->library("session");
+	    
 	}
 
 	public function albums(){
-		header('Content-type: application/json');
+		$this->load->model('Album');
+		$album_id = $this->uri->segment(3, 0);
+		$album_id = $album_id?$album_id:$this->input->get_post('album_id');
+		$filter = array();
 		$albums = array();
+		
+		if(!empty($album_id)){
+			$filter["album.id"] = $album_id;
+		}
 
-		for($i=0;$i<10;$i++){
+		foreach($this->Album->load($filter) as $album){
 			array_push ($albums,
 				array(
-					"id"=>$i,
-					"name"=>"Mt. Washington",
-					"description"=>"Mt. Washington", 
-					"uploadDate"=>"08/05/2013", 
-					"photoCount"=>"50",
-					"coverImage"=>"1.jpg"
+					"id"=>$album->id,
+					"name"=>$album->name,
+					"description"=>$album->description, 
+					"uploadDate"=>$album->uploadDate, 
+					"photoCount"=>$album->photoCount,
+					"coverPhoto"=>$album->coverPhotoName
 					)
 				);
 		}
-
+		
+		header('Content-type: application/json');		
 		echo (json_encode(array("albums"=>$albums)));		
 	}
 
 	public function albumPhotos(){
-		header('Content-type: application/json');
-		$album = $this->input->get('album');
+		$this->load->model('Photo');
+		$album_id = $this->input->get_post('album');
+		$filter = array();
 		$photos = array();
 
-		if($album==="1"){			
-			for($i=0;$i<50;$i++){
-				array_push ($photos,array("id"=>$i,"album"=>"1", "source"=>(($i%15)+1).".jpg", "description"=>"", "meta"=>""));
-			}
-			echo (json_encode(array("album-photos"=>$photos)));
-			
-		} else {
-			for($i=0;$i<30;$i++){
-				array_push ($photos,array("id"=>$i,"album"=>"2", "source"=>(($i%15)+1).".jpg", "description"=>"", "meta"=>""));
-			}
-			echo (json_encode(array("album-photos"=>$photos)));			
+		if(!empty($album_id)){
+			$filter["album"] = $album_id;
 		}
-		
+
+		foreach($this->Photo->load($filter) as $photo){
+			array_push ($photos,
+				array(
+					"id"=>$photo->id,
+					"album"=>$photo->album,
+					"source"=>$photo->name, 
+					"description"=>$photo->description, 
+					"meta"=>$photo->meta
+					)
+				);
+		}
+
+		header('Content-type: application/json');
+		echo (json_encode(array("album-photos"=>$photos)));
 	}
 
 	public function blogCategories(){

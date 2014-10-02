@@ -4,34 +4,47 @@ class Albums extends CI_Controller{
 
 	var $dropOffPath   = '';
 
-	private function rrmdir($dir) { 
-	   if (is_dir($dir)) { 
-	     $objects = scandir($dir); 
-	     foreach ($objects as $object) { 
-	       if ($object != "." && $object != "..") { 
-	         if (filetype($dir."/".$object) == "dir") $this->rrmdir($dir."/".$object); else unlink($dir."/".$object); 
-	       } 
-	     } 
-	     reset($objects); 
-	     rmdir($dir); 
-	   } 
-	}
-
 	public function __construct()
 	{
 	    parent::__construct();
 	    
 	    /* Load the libraries and helpers */
-	    $this->load->library("session");
+	    $this->load->library(array("session", "imageresize"));
 	    $this->load->helper(array('url','date'));
+        $this->load->model('Album');
+        $this->load->model('Photo');
 	}
 
+    private function rrmdir($dir) { 
+       if (is_dir($dir)) { 
+         $objects = scandir($dir); 
+         foreach ($objects as $object) { 
+           if ($object != "." && $object != "..") { 
+             if (filetype($dir."/".$object) == "dir") $this->rrmdir($dir."/".$object); else unlink($dir."/".$object); 
+           } 
+         } 
+         reset($objects); 
+         rmdir($dir); 
+       } 
+    }
+
 	public function createAlbum($params) {
-        $this->load->model('Album');
-        $this->Album->name = $params['name'];
-        $this->Album->description = $params['description'];
-        $this->Album->uploadDate = $params['uploadDate'];
-        $album_id = $this->Album->save();
+        $newAlbum = new Album();
+        $newAlbum->name = $params['name'];
+        $newAlbum->description = $params['description'];
+        $newAlbum->uploadDate = $params['uploadDate'];
+        $newAlbum->save();
+        return $newAlbum;
+    }
+
+    public function createPhoto($params) {
+        $newPhoto = new Photo();
+        $newPhoto->album = $params['album'];
+        $newPhoto->name = $params['name'];
+        $newPhoto->description = $params['description'];
+        $newPhoto->meta = $params['meta'];
+        $newPhoto->save();
+        return $newPhoto;        
     }
 
 	/**
@@ -40,89 +53,72 @@ class Albums extends CI_Controller{
 	* @method 'importImageFromDropoff'
 	*/
 	public function importImageFromDropoff() {
-		$this->load->library('imageresize');
 
         ini_set('memory_limit', '-1');
         ini_set("max_execution_time", 0);
 
-        $assetFolder = FCPATH.'assets'.DIRECTORY_SEPARATOR;
-        $dropOffFolder = $assetFolder . 'dropoff';
-        $validTypes = array("image/jpeg", "image/png", "image/gif");
-        
-        if ($dfhandle = opendir($dropOffFolder)) {
-            while (false !== ($dfentry = readdir($dfhandle))) {
-                if ($dfentry != "." && $dfentry != "..") {
-                    $dir = $dropOffFolder . DIRECTORY_SEPARATOR . $dfentry;
-                    if (is_dir($dir) && $handle = opendir($dir)) {
-                    	
-                    	/*	
-                        //create an album by the directory name
-						$album_id = $this->createAlbum(
-                        	array(
-                        		'name'=>strtoupper(substr($dir, strrpos($dir, DIRECTORY_SEPARATOR) + 1))
-                        	)
-                        );
-                        */
+		$assetFolder = FCPATH.'assets'.DIRECTORY_SEPARATOR;
+        $dropOffFolder = $assetFolder . 'dropoff'.DIRECTORY_SEPARATOR;
+        $validImageTypes = array("image/jpeg", "image/png", "image/gif");
+        $first_photo_id = null;
 
-                        //make album directory
-						$album_id = 1;
-                        $albumDir = $assetFolder . 'albums' . DIRECTORY_SEPARATOR . trim(strtoupper($dfentry));
+        foreach(array_diff(scandir($dropOffFolder), array('..', '.')) as $albumName){
+            $album = $dropOffFolder.$albumName;
+            if (is_dir($album)){
+                $description = file_get_contents($album.DIRECTORY_SEPARATOR.'description.txt');
+                $albumFolder = $assetFolder. 'albums' . DIRECTORY_SEPARATOR . trim(strtoupper($albumName));
 
-                        if(is_dir($albumDir)){
-                        	$this->rrmdir($albumDir);
+                //CREATE ALBUM ENTRY IN DATABASE
+                $newAlbum = $this->createAlbum(array(
+                    'name'=>strtoupper(trim($albumName)),
+                    'description'=>$description?$description:'',
+                    'uploadDate'=>date("Y-m-d H:i:s",now())
+                ));
+               
+                //remove folder if it alrady exits
+                $this->rrmdir($albumFolder);
+                mkdir($albumFolder);
+                mkdir($albumFolder . DIRECTORY_SEPARATOR . 'THUMBS');
+
+                foreach(array_diff(scandir($album), array('..', '.')) as $photoName){
+                    $photo = $album.DIRECTORY_SEPARATOR.$photoName;
+                    if (!is_dir($photo)){
+                        
+                        $fileMetaData = @exif_read_data($photo);
+                        
+                        if ($fileMetaData!==FALSE && in_array($fileMetaData['MimeType'], $validImageTypes)){
+
+                            $this->imageresize->load($photo);
+
+                            //$this->imageresize->putWaterMark(CONST_IMAGE_BASE_DIR . 'copyright.png');
+                            $this->imageresize->save($albumFolder . DIRECTORY_SEPARATOR. $photoName  , $this->imageresize->getImageType(), 100);
+
+                            //CREATE AND SAVE THUMBNAIL
+                            $this->imageresize->resizeToWidth(250);
+                            if($this->imageresize->getHeight()>250){
+                                $this->imageresize->resizeToHeight(250);    
+                            }                                       
+                            $this->imageresize->save($albumFolder.DIRECTORY_SEPARATOR.'THUMBS'.DIRECTORY_SEPARATOR. $photoName  , $this->imageresize->getImageType(), 100);
+
+                            $newPhoto = $this->createPhoto(array(
+                                'album'=>$newAlbum->id,
+                                'name'=>$photoName,
+                                'description'=>'',
+                                'meta'=>json_encode($fileMetaData)   
+                            ));
+                               
+                            if($first_photo_id===null){
+                                $first_photo_id = $newPhoto->id;
+                                $newAlbum->coverPhoto = $first_photo_id;
+                                $newAlbum->uploadDate = date("Y-m-d H:i:s",strtotime($fileMetaData['DateTime']));
+                                $newAlbum->update();                                
+                            }                                                    
                         }
-                        mkdir($albumDir);
-                        mkdir($albumDir . DIRECTORY_SEPARATOR . 'THUMBS');
 
-                        if (!($album_id === false)) {
-                            while (false !== ($entry = readdir($handle))) {
-                                if ($entry != "." && $entry != "..") {
-                                    $filename = $dir . DIRECTORY_SEPARATOR . $entry;
-
-
-                                    $imgExt = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-
-                                    //check for valid image type
-                                    if (in_array($imgExt, array('jpg', 'gif', 'png')) && ($fileMetaData = exif_read_data($filename)) && in_array($fileMetaData['MimeType'], $validTypes)) {
-                                    	$this->imageresize->load($filename);
-
-                                    	$this->imageresize->resizeToWidth(250);
-                                        if($this->imageresize->getHeight()>250){
-                                            $this->imageresize->resizeToHeight(250);    
-                                        }                                    	
-										$this->imageresize->save($albumDir . DIRECTORY_SEPARATOR . 'THUMBS'.DIRECTORY_SEPARATOR. $entry  , $this->imageresize->getImageType(), 100);
-                                    	                                    	
-                                    	//header('Content-Type: image/jpg');
-                                    	//echo $this->imageresize->getImage();
-                                    	
-                                    	/*
-                                        $imageResizer->resizeToHeight(600);
-                                        $imageResizer->putWaterMark(CONST_IMAGE_BASE_DIR . 'copyright.png');
-                                        $imageResizer->save($albumDir . DIRECTORY_SEPARATOR . $guid . '.' . $imgExt, $imageResizer->getImageType(), 100);
-
-                                        $imageResizer->putWaterMark(null);
-                                        $imageResizer->resizeToHeight(80);
-                                        $imageResizer->save($albumDir . DIRECTORY_SEPARATOR . 'THUMB' . DIRECTORY_SEPARATOR . $guid . '.' . $imgExt, $imageResizer->getImageType(), 100);
-
-                                        $this->setProperty('pic_id', $guid);
-                                        $this->setProperty('album_id', $album_id);
-                                        $this->setProperty('filename', $guid . '.' . $imgExt);
-                                        $this->setProperty('taken_dt', $fileMetaData['DateTimeOriginal']);
-                                        //echo $fileMetaData['DateTime']." ".$filename."<br>";
-                                        $this->addPicture();
-                                        */
-
-                                    }
-                                    
-                                }
-                            }
-                        }
-                        closedir($handle);                        
                     }
                 }
             }
-            closedir($dfhandle);
-        }
+        }        
     }
 }
 ?>

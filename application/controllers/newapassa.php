@@ -66,78 +66,74 @@ class Newapassa extends CI_Controller{
 	}
 
 	public function blogCategories(){
-		header('Content-type: application/json');
-		echo '{
-			"blog-categories": [
-				{
-					"id":1,
-					"name":"Phonegap",
-					"blogsCount":"2"
-				},
-				{
-					"id":2,
-					"name":"PHP",
-					"blogsCount":"1"
-				},
-				{
-					"id":3,
-					"name":"MySql",
-					"blogsCount":"1"
-				}
-			]
-		}';
+		$this->load->model('BlogCategory');
+		$category_id = $this->uri->segment(3, 0);
+		$category_id = $category_id?$category_id:$this->input->get_post('category_id');
+		$filter = array();
+		$categories = array();
+		
+		if(!empty($category_id)){
+			$filter["blogCategory.id"] = $category_id;
+		}
+
+		foreach($this->BlogCategory->load($filter) as $category){
+			array_push ($categories,
+				array(
+					"id"=>$category->id,
+					"name"=>$category->name,
+					"blogCount"=>$category->blogCount
+					)
+				);
+		}
+		
+		header('Content-type: application/json');		
+		echo (json_encode(array("blog-categories"=>$categories)));				
 	}
 
 	public function blogs(){
-		header('Content-type: application/json');
-		$category = $this->input->get('category');
-		if($category === "1"){
-			echo '{
-				"blogs": [
-					{
-						"id":1,
-						"category":1,
-						"title":"My First Attempt On Creating A Mobile App Using Phonegap",
-						"abstract":"So our company wanted to step on mobile development avenue and we wanted to cook up a quick mobile application as a demo. The problem was we didn\'t have anyone in our team who have had experience with building mobile application, added to that we wanted to make sure that the application we build will run on major mobile devices or OS. Ayhan our VP of Software Engineering team in Innovate knew exaclty what we needed - phonegap. It didn\'t take much time to write simple apps using phonegap because all we needed to know was HTML,CSS and javascript.",						
-						"createdOn":"08/05/2013"
-					},
-					{
-						"id":2,
-						"category":1,
-						"title":"Phonegap : How To Play Local Music File In IOS",
-						"abstract":"OK you might be thinking what\'s the big deal!! Just go throught the tutorial here and get things done right? Well but in the example, there is nothing about loading music file from local installation.",
-						"createdOn":"08/05/2013"
-					}
-				]
-			}';
-
-		} else if($category === "2"){
-			echo '{
-				"blogs": [
-					{
-						"id":3,
-						"category":2,
-						"title":"Creating A Basic MVC Based Solution In PHP",
-						"abstract":"What is this MVC people talk about these days? That was my initial thought when I started hearing about MVC in my work place back in around 2006. After looking it up in google, I first got that MVC is short hand for Model, View and Controller and then I lost interest. Few weeks passed by and then I was still hearing MVC from every angle possible - folks who spoke about MVC had kinda smug on their face. So I forced myself to look into it one more time - one of the best decision I made in my career.",
-						"createdOn":"02/19/2013"
-					}
-				]
-			}';
-
-		} else if($category === "3"){
-			echo '{
-				"blogs": [
-					{
-						"id":4,
-						"category":3,
-						"title":"If Possible Always Avoid Running Queries Against INFORMATION_SCHEMA Specially On Ajax Requests",
-						"abstract":"I was having pretty difficult time to figure out what was causig my ajax request to complete in 6 seconds or more. Well after you have read the title I think you already know where this is going but I really had to spend considerable amount of time to figure it out. So I basically had a rest end point where I would instantiate a model and call some methods on it.",
-						"createdOn":"02/24/2013"
-					}
-				]
-			}';
-
+		$this->load->model('Blog');
+		$category_id = $this->uri->segment(3, 0);
+		$category_id = $category_id?$category_id:$this->input->get_post('category');
+		$filter = array();
+		$blogs = array();
+		
+		if(!empty($category_id)){
+			$filter["blog.category_id"] = $category_id;
 		}
+
+		foreach($this->Blog->load($filter) as $blog){
+			$date = new DateTime($blog->post_dt);
+			$abstract = preg_match('/<abstract>(.*)<\/abstract>/', $blog->content, $matches);
+			if(count($matches)>0){
+				$abstract = $matches[1];
+			}else{
+				$abstract = substr(strip_tags($blog->content), 0, 500);
+				$abstract = substr($abstract, 0, strrpos($abstract, " ")); 
+			}
+
+			array_push ($blogs,
+				array(
+					"id"=>$blog->id,
+					"title"=>$blog->title,
+					"category"=>$blog->category_id,
+					"createdOn"=>$date->format('Y-m-d'),
+					"abstract"=>$abstract."...."
+					)
+				);
+		}
+		
+		header('Content-type: application/json');		
+		echo (json_encode(array("blogs"=>$blogs)));		
+	}
+
+	public function blogContent(){
+		$this->load->model('Blog');
+		$blog_id = $this->uri->segment(3, 0);
+		$filter = array();
+		$blogs = array();
+
+		$blog = $this->Blog->load($blog_id);
+		echo $blog[0]->content;		
 		
 	}
 

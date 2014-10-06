@@ -56,7 +56,7 @@ class Albums extends CI_Controller{
 
         ini_set('memory_limit', '-1');
         ini_set("max_execution_time", 0);
-
+        
 		$assetFolder = FCPATH.'assets'.DIRECTORY_SEPARATOR;
         $dropOffFolder = $assetFolder . 'dropoff'.DIRECTORY_SEPARATOR;
         $validImageTypes = array("image/jpeg", "image/png", "image/gif");
@@ -66,6 +66,7 @@ class Albums extends CI_Controller{
             $album = $dropOffFolder.$albumName;
             if (is_dir($album)){
                 $description = file_get_contents($album.DIRECTORY_SEPARATOR.'description.txt');
+                //$albumFolder = FCPATH.'..'. DIRECTORY_SEPARATOR .'dshrestha'. DIRECTORY_SEPARATOR .'assets'. DIRECTORY_SEPARATOR . 'albums' . DIRECTORY_SEPARATOR . trim(strtoupper($albumName));
                 $albumFolder = $assetFolder. 'albums' . DIRECTORY_SEPARATOR . trim(strtoupper($albumName));
 
                 //CREATE ALBUM ENTRY IN DATABASE
@@ -74,7 +75,7 @@ class Albums extends CI_Controller{
                     'description'=>$description?$description:'',
                     'uploadDate'=>date("Y-m-d H:i:s",now())
                 ));
-               
+
                 //remove folder if it alrady exits
                 $this->rrmdir($albumFolder);
                 mkdir($albumFolder);
@@ -90,7 +91,7 @@ class Albums extends CI_Controller{
 
                             $this->imageresize->load($photo);
 
-                            //$this->imageresize->putWaterMark(CONST_IMAGE_BASE_DIR . 'copyright.png');
+                            $this->imageresize->putWaterMark($assetFolder.'images'.DIRECTORY_SEPARATOR.'copyright.png');
                             $this->imageresize->save($albumFolder . DIRECTORY_SEPARATOR. $photoName  , $this->imageresize->getImageType(), 100);
 
                             //CREATE AND SAVE THUMBNAIL

@@ -89,12 +89,6 @@ EOD;
 
 		array_push($constraints, array('name'=>'FK1_PHOTO', 'script'=>$constraint));
 
-$constraint = <<<'EOD'
-ALTER TABLE `blog` ADD CONSTRAINT `FK1_BLOG` FOREIGN KEY (`category_id`) REFERENCES `blog_category` (`id`) ON DELETE CASCADE
-EOD;
-
-		array_push($constraints, array('name'=>'FK1_BLOG', 'script'=>$constraint));
-
 $record = <<<'EOD'
 TRUNCATE TABLE `blog_category`
 EOD;
@@ -125,17 +119,18 @@ EOD;
 		foreach($tables as $table){
 			$query = $this->db->query($table['script']);	
 			echo '<div>TABLE '.$table['name'].' CREATED.</div>';
-		}1
+		}
+		foreach($records as $record){
+			$query = $this->db->query($record);	
+			echo '<div>INSERT COMPLETED.</div>';
+		}
 		foreach($constraints as $constraint){
 			if(!$this->doesConstraintExist($constraint['name'])){
 				$this->db->query($constraint['script']);	
 				echo '<div>CONSTRAINT '.$constraint['name'].' ADDED.</div>';
 			}
 		}
-		foreach($records as $record){
-			$query = $this->db->query($record);	
-			echo '<div>INSERT COMPLETED.</div>';
-		}
+		
 
 		echo '<div>SETUP COMPLETED.</div>';
 	}

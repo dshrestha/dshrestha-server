@@ -66,15 +66,14 @@ class Albums extends CI_Controller{
             $album = $dropOffFolder.$albumName;
             if (is_dir($album)){
                 $description = file_get_contents($album.DIRECTORY_SEPARATOR.'description.txt');
-                //$albumFolder = FCPATH.'..'. DIRECTORY_SEPARATOR .'dshrestha'. DIRECTORY_SEPARATOR .'assets'. DIRECTORY_SEPARATOR . 'albums' . DIRECTORY_SEPARATOR . trim(strtoupper($albumName));
-                $albumFolder = $assetFolder. 'albums' . DIRECTORY_SEPARATOR . trim(strtoupper($albumName));
-
-                //CREATE ALBUM ENTRY IN DATABASE
+                $albumFolder = FCPATH.'..'. DIRECTORY_SEPARATOR .'dshrestha'. DIRECTORY_SEPARATOR .'assets'. DIRECTORY_SEPARATOR . 'albums' . DIRECTORY_SEPARATOR . trim(strtoupper($albumName));
+                
+                //CREATE ALBUM ENTRY IN DATABASE               
                 $newAlbum = $this->createAlbum(array(
                     'name'=>strtoupper(trim($albumName)),
                     'description'=>$description?$description:'',
                     'uploadDate'=>date("Y-m-d H:i:s",now())
-                ));
+                ));               
 
                 //remove folder if it alrady exits
                 $this->rrmdir($albumFolder);
@@ -91,8 +90,10 @@ class Albums extends CI_Controller{
 
                             $this->imageresize->load($photo);
 
+                            //RESIZE ORIGINAL IMAGE 
+                            $this->imageresize->resizeToWidth(1920);
                             $this->imageresize->putWaterMark($assetFolder.'images'.DIRECTORY_SEPARATOR.'copyright.png');
-                            $this->imageresize->save($albumFolder . DIRECTORY_SEPARATOR. $photoName  , $this->imageresize->getImageType(), 100);
+                            $this->imageresize->save($albumFolder . DIRECTORY_SEPARATOR. $photoName  , $this->imageresize->getImageType(), 75);
 
                             //CREATE AND SAVE THUMBNAIL
                             $this->imageresize->resizeToWidth(250);

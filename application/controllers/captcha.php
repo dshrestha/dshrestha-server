@@ -14,7 +14,7 @@ class Captcha extends CI_Controller{
 	public function index()	{
 		$vals = array(
 	    'img_path'	=> 'assets/images/captcha/',
-	    'img_url'	=> base_url().'assets/images/captcha/',
+	    'img_url'	=> 'assets/images/captcha/',
 	    'img_width'	=> '150',
 	    'img_height' => 30,
 	    'expiration' => 7200

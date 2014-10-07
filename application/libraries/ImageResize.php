@@ -41,6 +41,9 @@ class ImageResize {
     }
 
     function save($filename, $image_type = IMAGETYPE_JPEG, $compression = 75, $permissions = null) {
+        if(file_exists ($filename)){
+            unlink($filename);
+        }
         if ($image_type == IMAGETYPE_JPEG) {
             imagejpeg($this->image, $filename, $compression);
         } elseif ($image_type == IMAGETYPE_GIF) {
@@ -107,7 +110,6 @@ class ImageResize {
     function putWaterMark($stampLocation) {
         if ($stampLocation!=null) {
             //source http://php.net/manual/en/image.examples-watermark.php
-
             $stamp = imagecreatefrompng($stampLocation);
             // Set the margins for the stamp and get the height/width of the stamp image
             $marge_right = 10;

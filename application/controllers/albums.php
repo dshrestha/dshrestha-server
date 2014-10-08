@@ -60,11 +60,12 @@ class Albums extends CI_Controller{
 		$assetFolder = FCPATH.'assets'.DIRECTORY_SEPARATOR;
         $dropOffFolder = $assetFolder . 'dropoff'.DIRECTORY_SEPARATOR;
         $validImageTypes = array("image/jpeg", "image/png", "image/gif");
-        $first_photo_id = null;
+        
 
         foreach(array_diff(scandir($dropOffFolder), array('..', '.')) as $albumName){
             $album = $dropOffFolder.$albumName;
             if (is_dir($album)){
+                $first_photo_id = null;
                 $description = file_get_contents($album.DIRECTORY_SEPARATOR.'description.txt');
                 $albumFolder = FCPATH.'..'. DIRECTORY_SEPARATOR .'dshrestha'. DIRECTORY_SEPARATOR .'assets'. DIRECTORY_SEPARATOR . 'albums' . DIRECTORY_SEPARATOR . trim(strtoupper($albumName));
                 
@@ -95,11 +96,8 @@ class Albums extends CI_Controller{
                             $this->imageresize->putWaterMark($assetFolder.'images'.DIRECTORY_SEPARATOR.'copyright.png');
                             $this->imageresize->save($albumFolder . DIRECTORY_SEPARATOR. $photoName  , $this->imageresize->getImageType(), 75);
 
-                            //CREATE AND SAVE THUMBNAIL
-                            $this->imageresize->resizeToWidth(250);
-                            if($this->imageresize->getHeight()>250){
-                                $this->imageresize->resizeToHeight(250);    
-                            }                                       
+                            //CREATE AND SAVE THUMBNAIL                            
+                            $this->imageresize->resizeToHeight(250);                                
                             $this->imageresize->save($albumFolder.DIRECTORY_SEPARATOR.'THUMBS'.DIRECTORY_SEPARATOR. $photoName  , $this->imageresize->getImageType(), 100);
 
                             $newPhoto = $this->createPhoto(array(
@@ -112,7 +110,7 @@ class Albums extends CI_Controller{
                             if($first_photo_id===null){
                                 $first_photo_id = $newPhoto->id;
                                 $newAlbum->coverPhoto = $first_photo_id;
-                                $newAlbum->uploadDate = date("Y-m-d H:i:s",strtotime($fileMetaData['DateTime']));
+                                $newAlbum->uploadDate = date("Y-m-d",strtotime($fileMetaData['DateTime']));
                                 $newAlbum->update();                                
                             }                                                    
                         }

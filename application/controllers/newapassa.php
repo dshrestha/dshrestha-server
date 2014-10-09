@@ -174,11 +174,11 @@ class Newapassa extends CI_Controller{
 					"website":"http://wayfair.com/",
 					"logoPath":"assets/images/logo/wayfair.jpg",
 					"description":"Wayfair is a leader in the ecommerce space for things for the home (couches, end tables, lamps, and literally 3.1 million other items) and #51 overall in the ecommerce rankings(2011).",
-					"address_1":"177 Huntington Avenue ",
-					"address_2":"",
+					"address_1":"4 Copley Place",
+					"address_2":"Floor 7",
 					"city":"Boston",
 					"state":"MA",
-					"zip":"",
+					"zip":"02116",
 					"country":"USA"					
 				},
 				{
@@ -187,7 +187,7 @@ class Newapassa extends CI_Controller{
 					"website":"http://wlinktech.com/",
 					"logoPath":"assets/images/logo/worldlink.gif",
 					"description":"WorldLink is an experienced software solutions provider with extensive experience in consulting, development and implementation of enterprise applications in areas of ERP, CRM, HRM, Payroll and Pensions. Our experience covers a wide range of industry and market sectors that include government, telecom, BFSI and private businesses. Our services include consulting, application development, product management and maintenance, enterprise application implementation, integration, quality assurance and testing. ",
-					"address_1":"177 Huntington Avenue ",
+					"address_1":"",
 					"address_2":"",
 					"city":"Pulchowk Lalitpur-5",
 					"state":"Bangmati",

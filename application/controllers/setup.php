@@ -21,6 +21,63 @@ class Setup extends CI_Controller {
 		return false;
 	}
 
+	public function user($what=null){
+
+		$createTable = function(){
+
+$table = <<<'EOD'
+CREATE TABLE IF NOT EXISTS `user` (
+`id` int(11) NOT NULL AUTO_INCREMENT,
+`firstName` varchar(255) NOT NULL,
+`middleName` varchar(255) DEFAULT NULL,
+`lastName` varchar(255) NOT NULL,
+`email` varchar(255) NOT NULL,
+`password` varchar(255) NOT NULL,
+`salt` varchar(255) NOT NULL,
+`createdOn` datetime NOT NULL,
+`updatedOn` datetime NOT NULL,
+UNIQUE KEY `UNQ1_USER` (`email`),
+PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+EOD;
+			$query = $this->db->query($table);	
+		};
+
+		$insertData = function(){
+			$salt = substr(str_shuffle(MD5(microtime())), 0, 10);
+			$createdOn = date("Y-m-d H:i:s");
+			$password = hash('sha512','Letmein5%'.$salt);
+
+$record = <<<EOD
+INSERT INTO `user` (`id`, `firstName`, `middleName`, `lastName`, `email`, `password`, `salt`, `createdOn`, `updatedOn`) VALUES
+(1, 'Deewendra', 'Gopal', 'Shrestha', 'deewendra.shrestha@gmail.com', '{$password}', '{$salt}', '{$createdOn}', '{$createdOn}')
+EOD;
+			$query = $this->db->query($record);	
+		};
+
+		$clearData = function(){
+$record = <<<'EOD'
+TRUNCATE TABLE `user`
+EOD;
+			$query = $this->db->query($record);	
+		};
+
+		if(isset($what)){
+			if($what==='table'){
+				$createTable();
+			} else if ($what==='data'){
+				$insertData();
+			} else if ($what==='clear'){
+				$clearData();
+			} 
+		}
+		else {
+			$createTable();
+			$clearData();
+			$insertData();
+		}
+	}
+
 	/**
 	 * Sets up DB.
 	 *
@@ -31,6 +88,10 @@ class Setup extends CI_Controller {
 		$records = array();
 
 //TABLE SCRIPTS		
+
+		array_push($tables, array('name'=>'user', 'script'=>$table));		
+
+	
 $table = <<<'EOD'
 CREATE TABLE IF NOT EXISTS `album` (
 `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -89,6 +150,7 @@ EOD;
 
 		array_push($constraints, array('name'=>'FK1_PHOTO', 'script'=>$constraint));
 
+//INSERT RECORDS SCRIPTS
 $record = <<<'EOD'
 TRUNCATE TABLE `blog_category`
 EOD;

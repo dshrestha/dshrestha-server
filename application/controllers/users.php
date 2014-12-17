@@ -16,7 +16,7 @@ class Users extends CI_Controller{
 		$this->form_validation->set_rules('username', 'Username', 'trim|required');
 		$this->form_validation->set_rules('password', 'Password', 'trim|required');
 		
-		if ($this->form_validation->run() == FALSE) {
+		if ($this->form_validation->run() === FALSE) {
 			$errors = array();
 			$this->form_validation->set_error_delimiters('','');
 			if($this->form_validation->error('username')!="") {
@@ -31,7 +31,19 @@ class Users extends CI_Controller{
 			echo (json_encode(array("errors"=>$errors)));				
 		}
 		else {
-			echo 'success';
+			$username = $this->input->post('username');
+			$password = $this->input->post('password');
+			
+			$user = $this->User->load(array('email'=>$username)); 
+			$salt = $user->salt;
+
+			if(hash('sha512',$password.$salt) === $user->password){
+				echo "success";
+			} else {
+				http_response_code(422);
+				header('Content-type: application/json');
+				echo (json_encode(array("errors"=>array('field'=>'username','message'=>array("Invalid username or password")))));
+			}
 			
 		}
 	}
